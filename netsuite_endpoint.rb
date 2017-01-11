@@ -28,6 +28,8 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   end
 
   before do
+    @config['netsuite_last_updated_after'] ||= Time.at(@payload["last_poll"]).to_s
+
     if config = @config
       # https://github.com/wombat/netsuite_integration/pull/27
       # Set connection/flow parameters with environment variables if they aren't already set from the request
@@ -68,6 +70,28 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
         log_level    :info
       end
     end
+  end
+
+  post '/get_vendors' do
+    vendors = NetsuiteIntegration::Vendor.new(@config)
+
+    vendors.messages.each do |message|
+      add_object "vendor", message
+    end
+
+
+    if vendors.collection.any?
+      add_parameter 'netsuite_last_updated_after', vendors.last_modified_date
+    else
+      add_parameter 'netsuite_last_updated_after', @config['netsuite_last_updated_after']
+      add_value 'vendors', []
+    end
+
+    count = vendors.messages.count
+    @summary = "#{count} #{"item".pluralize count} found in NetSuite"
+
+    result 200, @summary
+
   end
 
   post '/get_products' do
