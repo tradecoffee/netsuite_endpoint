@@ -58,9 +58,12 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
 
         sandbox config['netsuite_sandbox'].to_s == "true" || config['netsuite_sandbox'].to_s == "1"
 
-        email        config.fetch('netsuite_email')
-        password     config.fetch('netsuite_password')
         account      config.fetch('netsuite_account')
+        consumer_key config.fetch('netsuite_consumer_key')
+        consumer_secret config.fetch('netsuite_consumer_secret')
+        token_id config.fetch('netsuite_token_id')
+        token_secret config.fetch('netsuite_token_secret')
+
         read_timeout 175
         log_level    :info
       end
