@@ -4,12 +4,11 @@ gem 'sinatra'
 gem 'tilt', '~> 1.4.1'
 gem 'tilt-jbuilder', require: 'sinatra/jbuilder'
 
-gem 'jbuilder', '2.0.6'
+gem 'jbuilder'
 gem 'endpoint_base', github: 'spree/endpoint_base'
 
-gem 'netsuite', github: 'wombat/netsuite', branch: 'fix-customer-field-refs'
+gem 'netsuite'
 gem 'honeybadger'
-gem 'airbrake'
 
 group :development do
   gem 'rake'
@@ -19,7 +18,6 @@ end
 
 group :test do
   gem 'vcr'
-  gem 'rspec', '~> 2.14'
   gem 'rack-test'
   gem 'webmock'
 end
