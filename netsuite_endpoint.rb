@@ -72,44 +72,30 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
     end
   end
 
-  post '/get_vendors' do
-    vendors = NetsuiteIntegration::Vendor.new(@config)
+  def self.fetch_endpoint(path, service_class, key)
+    post path do
+      service = service_class.new(@config)
 
-    vendors.messages.each do |message|
-      add_object "vendor", message
-    end
-
-
-    if vendors.collection.any?
-      add_parameter 'netsuite_last_updated_after', vendors.last_modified_date
-    else
-      add_parameter 'netsuite_last_updated_after', @config['netsuite_last_updated_after']
-      add_value 'vendors', []
-    end
-
-    count = vendors.messages.count
-    @summary = "#{count} #{"item".pluralize count} found in NetSuite"
-
-    result 200, @summary
-
-  end
-
-  post '/get_products' do
-    products = NetsuiteIntegration::Product.new(@config)
-
-    if products.collection.any?
-      products.messages.each do |message|
-        add_object "product", message
+      service.messages.each do |message|
+        add_object key, message
       end
 
-      add_parameter 'netsuite_last_updated_after', products.last_modified_date
+      if service.collection.any?
+        add_parameter 'netsuite_last_updated_after', service.last_modified_date
+      else
+        add_parameter 'netsuite_last_updated_after', @config['netsuite_last_updated_after']
+        add_value key.pluralize, []
+      end
 
-      count = products.messages.count
-      @summary = "#{count} #{"item".pluralize count} found in NetSuite"
+      count = service.messages.count
+      @summary = "#{count} #{key.pluralize count} found in NetSuite"
+
+      result 200, @summary
     end
-
-    result 200, @summary
   end
+
+  fetch_endpoint '/get_products', NetsuiteIntegration::Product, "product"
+  fetch_endpoint '/get_vendors', NetsuiteIntegration::Vendor, "vendor"
 
   ['/add_order', '/update_order'].each do |path|
     post path do
