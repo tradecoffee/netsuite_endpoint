@@ -95,6 +95,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   end
 
   fetch_endpoint '/get_products', NetsuiteIntegration::Product, "product"
+  fetch_endpoint '/get_purchase_orders', NetsuiteIntegration::PurchaseOrder, "purchase_order"
   fetch_endpoint '/get_vendors', NetsuiteIntegration::Vendor, "vendor"
 
   ['/add_order', '/update_order'].each do |path|
