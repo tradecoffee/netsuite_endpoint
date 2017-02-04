@@ -1,14 +1,10 @@
 source 'https://www.rubygems.org'
 
-gem 'sinatra'
-gem 'tilt', '~> 1.4.1'
-gem 'tilt-jbuilder', require: 'sinatra/jbuilder'
+ruby '2.3.1'
 
-gem 'jbuilder'
-gem 'endpoint_base', github: 'spree/endpoint_base'
+gemspec
 
-gem 'netsuite'
-gem 'honeybadger'
+gem 'endpoint_base', git: 'https://github.com/Follain/endpoint_base'
 
 group :development do
   gem 'rake'
@@ -24,9 +20,4 @@ end
 
 group :test, :development do
   gem 'pry-byebug'
-end
-
-group :production do
-  gem 'foreman'
-  gem 'unicorn'
 end

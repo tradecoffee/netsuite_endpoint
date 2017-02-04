@@ -1,21 +1,9 @@
 require "sinatra"
 require "endpoint_base"
 
-require File.expand_path(File.dirname(__FILE__) + '/lib/netsuite_integration')
+require File.expand_path(File.dirname(__FILE__) + '/netsuite_integration')
 
 class NetsuiteEndpoint < EndpointBase::Sinatra::Base
-  Honeybadger.configure do |config|
-    config.api_key = ENV['HONEYBADGER_KEY']
-    config.environment_name = ENV['RACK_ENV']
-  end if ENV['HONEYBADGER_KEY'].present?
-
-  Airbrake.configure do |config|
-    config.api_key = ENV['AIRBRAKE_API']
-    config.host    = ENV['AIRBRAKE_HOST'] if ENV['AIRBRAKE_HOST'].present?
-    config.port    = ENV['AIRBRAKE_PORT'] if ENV['AIRBRAKE_PORT'].present?
-    config.secure  = config.port == 443
-  end if ENV['AIRBRAKE_API'].present?
-
   set :logging, true
   set :show_exceptions, false
 
@@ -28,7 +16,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   end
 
   before do
-    @config['netsuite_last_updated_after'] ||= Time.at(@payload["last_poll"]).to_s
+    @config['netsuite_last_updated_after'] ||= Time.at(@payload["last_poll"]).to_s if @payload.present?
 
     if config = @config
       # https://github.com/wombat/netsuite_integration/pull/27
