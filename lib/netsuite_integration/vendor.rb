@@ -19,6 +19,7 @@ module NetsuiteIntegration
       collection.map do |vendor|
         {
           id: vendor.entity_id,
+          internal_id: vendor.internal_id,
           name: vendor.company_name,
           channel: 'NetSuite'
         }
