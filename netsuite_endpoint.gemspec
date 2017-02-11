@@ -15,6 +15,6 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'netsuite'
   s.add_runtime_dependency 'sinatra'
-  s.add_runtime_dependency 'tilt', '~> 1.4.1'
+  s.add_runtime_dependency 'tilt'
   s.add_runtime_dependency 'tilt-jbuilder'
 end
