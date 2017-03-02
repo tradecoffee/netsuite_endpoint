@@ -5,6 +5,7 @@ require File.expand_path(File.dirname(__FILE__) + '/netsuite_integration')
 
 class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   set :logging, true
+  # suppress netsuite warnings
   set :show_exceptions, false
 
   error Errno::ENOENT, NetSuite::RecordNotFound, NetsuiteIntegration::NonInventoryItemException do
@@ -16,7 +17,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   end
 
   before do
-    @config['netsuite_last_updated_after'] ||= Time.at(@payload["last_poll"]).to_s if @payload.present?
+    @config['netsuite_last_updated_after'] ||= Time.at(@payload["last_poll"].to_i).to_s if @payload.present?
 
     if config = @config
       # https://github.com/wombat/netsuite_integration/pull/27
@@ -54,8 +55,8 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
         token_id config.fetch('netsuite_token_id')
         token_secret config.fetch('netsuite_token_secret')
 
-        read_timeout 175
-        log_level    :info
+        read_timeout 240
+        #log_level    :debug
       end
     end
   end
@@ -84,6 +85,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
 
   fetch_endpoint '/get_products', NetsuiteIntegration::Product, "product"
   fetch_endpoint '/get_purchase_orders', NetsuiteIntegration::PurchaseOrder, "purchase_order"
+  fetch_endpoint '/get_transfer_orders', NetsuiteIntegration::TransferOrder, "transfer_order"
   fetch_endpoint '/get_vendors', NetsuiteIntegration::Vendor, "vendor"
 
   ['/add_order', '/update_order'].each do |path|
@@ -115,6 +117,35 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
       result 500, "NetSuite Sales Order not found for order #{@payload[:order][:number] || @payload[:order][:id]}"
     end
   end
+
+  post '/add_inventory_adjustment' do
+    
+    receipt = NetsuiteIntegration::InventoryAdjustment.new(@config, @payload)
+    summary = "Netsuite Inventory Adjustment Created "
+    result 200, summary
+  end
+
+  post '/add_purchase_order_receipt' do
+    
+    receipt = NetsuiteIntegration::PurchaseOrderReceipt.new(@config, @payload)
+    summary = "Netsuite Receipt Created "
+    result 200, summary
+  end
+
+  post '/add_transfer_order_receipt' do
+    
+    receipt = NetsuiteIntegration::TransferOrderReceipt.new(@config, @payload)
+    summary = "Netsuite Receipt Created "
+    result 200, summary
+  end
+  
+  post '/maintain_inventory_item' do
+    
+    receipt = NetsuiteIntegration::MaintainInventoryItem.new(@config, @payload)
+    summary = "Netsuite Item Created/Updated "
+    result 200, summary
+  end
+  
 
   post '/get_inventory' do
     begin

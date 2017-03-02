@@ -16,11 +16,14 @@ module NetsuiteIntegration
     end
 
     def vendors
-      collection.map do |vendor|
+      collection.map do |vendor|       
         {
           id: vendor.entity_id,
           internal_id: vendor.internal_id,
           name: vendor.company_name,
+          category: vendor.category.name,
+          subsidiary: vendor.subsidiary.name,
+          payables_account: vendor.payables_account.attributes[:name],
           channel: 'NetSuite'
         }
       end

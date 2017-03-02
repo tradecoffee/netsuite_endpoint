@@ -1,5 +1,5 @@
 module NetsuiteIntegration
-  class PurchaseOrder
+  class TransferOrder
     attr_reader :config
 
     def initialize(config)
@@ -7,7 +7,7 @@ module NetsuiteIntegration
     end
 
     def messages
-      @messages ||= purchase_orders
+      @messages ||= transfer_orders
     end
 
     def last_modified_date
@@ -15,30 +15,30 @@ module NetsuiteIntegration
     end
 
     def collection
-      @collection ||= Services::PurchaseOrder.new(@config).latest
+      @collection ||= Services::TransferOrder.new(@config).latest
     end
 
-    def purchase_orders
+    def transfer_orders
+        
       collection.map do |po|
         {
           id: po.tran_id,
           name: po.memo,
-          due_date: po.due_date,
-          orderdate: po.created_date,
           alt_po_number: po.internal_id,
+          orderdate: po.created_date,
           status: po.status,
-          type: 'SUPPLIER',
-          location: {
+          type: 'TRANSFER',
+          source_location: {
             name: po.location.attributes[:name],
             external_id: po.location.external_id,
             internal_id: po.location.internal_id
           },
-          source_location: {} ,
-          vendor: {
-            name: po.entity.attributes[:name],
-            external_id: po.entity.external_id,
-            internal_id: po.entity.internal_id
-          },
+          vendor: {},
+          location: {
+            name: po.transfer_location.attributes[:name],
+            external_id: po.transfer_location.external_id,
+            internal_id: po.transfer_location.internal_id
+          },         
           line_items: items(po),
           channel: 'NetSuite'
         }
@@ -46,18 +46,13 @@ module NetsuiteIntegration
     end
 
     def items(po)
-      po.item_list.items.each_with_index.map do |item, index|
+      po.item_list.item.each_with_index.map do |item, index|
         {
           itemno: item.item.attributes[:name],
           description: item.description,
-          quantity: item.quantity,
-          unit_price: item.rate,
-          vendor: {
-            name: item.vendor_name
-          },
-          location: {
-            name: item.location.attributes[:name]
-          }
+          quantity: item.quantity,      
+          vendor: {},
+          location: {}
         }
       end
     end
