@@ -49,6 +49,7 @@ module NetsuiteIntegration
       po.item_list.item.each_with_index.map do |item, index|
         {
           itemno: item.item.attributes[:name],
+          internal_id: item.item.internal_id,
           description: item.description,
           quantity: item.quantity,      
           vendor: {},
