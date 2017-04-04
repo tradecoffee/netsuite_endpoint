@@ -7,8 +7,10 @@ module NetsuiteIntegration
         @config = config
         if transfer_order?
             @adjustment_payload=payload[:transfer_order] 
-        else 
-            @adjustment_payload=payload[:inventory_adjustment]  
+        elsif   register_sale?
+                @adjustment_payload=payload[:register_sale]   
+            else 
+                @adjustment_payload=payload[:inventory_adjustment]  
         end
 
         if adjustment_location.nil?
@@ -39,6 +41,10 @@ module NetsuiteIntegration
         payload[:transfer_order].present?
     end
 
+    def register_sale?
+        payload[:register_sale].present?
+    end
+
     def adjustment_id
         @adjustment_id  ||=adjustment_payload['adjustment_id']
     end
@@ -54,9 +60,17 @@ module NetsuiteIntegration
     def adjustment_account_number
         @adjustment_account_number ||=adjustment_payload['adjustment_account_number']
     end
+
+    def adjustment_dept_name
+        @adjustment_dept_name ||=adjustment_payload['adjustment_dept_name']
+    end
      
     def adjustment_memo
         @adjustment_memo ||=adjustment_payload['adjustment_memo']
+    end
+
+    def adjustment_identifier
+        @adjustment_identifier ||=adjustment_payload['adjustment_identifier']
     end
 
     def adjustment_location
@@ -133,14 +147,26 @@ module NetsuiteIntegration
             if adjustment_account.nil?
                 raise raise "GL Account: #{adjustment_account_number} not found!"
             else
-                adjustment_account_id=adjustment_account.internal_id
+                adjustment_account_id=adjustment_account.internal_id                
+            end
+
+            if adjustment_dept_name.present?
+                adjustment_department=find_by_dept_name(adjustment_dept_name)
+                if adjustment_department.nil?
+                    raise raise "GL Department: #{adjustment_dept_name} not found!"
+                else
+                    adjustment_dept_id=adjustment_department.internal_id
+                end
             end
 
             @adjustment=NetSuite::Records::InventoryAdjustment.new
             adjustment.external_id=adjustment_id 
             adjustment.memo=adjustment_memo
             adjustment.tran_date=adjustment_date.to_datetime
-            adjustment.account={internal_id: adjustment_account_id}
+            adjustment.account={internal_id: adjustment_account_id}            
+            if adjustment_department.present?
+                adjustment.department={internal_id: adjustment_dept_id}
+            end
             adjustment.adj_location={internal_id: adjustment_location}
             location={internal_id: adjustment_location}
             adjustment.inventory_list=build_item_list
@@ -150,9 +176,11 @@ module NetsuiteIntegration
                 if adjustment.errors.any?{|e| "WARN" != e.type}
                     raise "Adjustment create failed: #{adjustment.errors.map(&:message)}"
                 else
-                    line_item = { adjustment_id: adjustment_id, netsuite_id: adjustment.internal_id, description: adjustment_memo }
+                    line_item = { adjustment_id: adjustment_id, netsuite_id: adjustment.internal_id, description: adjustment_memo,type: 'Adjustment' }                    
                     if transfer_order?
                         ExternalReference.record :transfer_order, adjustment_id, { netsuite: line_item }, netsuite_id: adjustment.internal_id
+                    elsif register_sale?   
+                        ExternalReference.record :register_sale, adjustment_identifier, { netsuite: line_item }, netsuite_id: adjustment.internal_id
                     else
                         ExternalReference.record :inventory_adjustment, adjustment_id, { netsuite: line_item }, netsuite_id: adjustment.internal_id
                     end          
@@ -165,6 +193,10 @@ module NetsuiteIntegration
 
     def find_by_account_number(account_number)
         NetSuite::Records::Account.search({ criteria: { basic: [{field: 'number',value: account_number,operator: 'is' }]}}).results.first
+    end
+
+    def find_by_dept_name(dept_name)
+        NetSuite::Records::Department.search({ criteria: { basic: [{field: 'name',value: dept_name,operator: 'is' }]}}).results.first
     end
  
  end
