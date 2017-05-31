@@ -79,7 +79,7 @@ module NetsuiteIntegration
 
     
     def build_item_list
-       line=0   
+       line=0
        adjustment_items = adjustment_payload[:line_items].map do |item| 
             #do not process zero qty adjustments
             if  item[:adjustment_qty].to_i != 0
@@ -115,7 +115,6 @@ module NetsuiteIntegration
                         #set default unit_price if none
                         NetSuite::Records::InventoryAdjustmentInventory.new({
                             item: { internal_id: nsproduct_id },
-                            quantity: item[:received],
                             line: line,
                             unit_cost: unit_cost.to_i,
                             adjust_qty_by: item[:adjustment_qty],
@@ -124,7 +123,6 @@ module NetsuiteIntegration
                 else
                     NetSuite::Records::InventoryAdjustmentInventory.new({
                         item: { internal_id: nsproduct_id },
-                        quantity: item[:received],
                         line: line,
                         adjust_qty_by: item[:adjustment_qty],
                         location: {internal_id: adjustment_location}               
@@ -145,7 +143,7 @@ module NetsuiteIntegration
             #internal numbers differ between platforms
             adjustment_account=find_by_account_number(adjustment_account_number)
             if adjustment_account.nil?
-                raise raise "GL Account: #{adjustment_account_number} not found!"
+                raise "GL Account: #{adjustment_account_number} not found!"
             else
                 adjustment_account_id=adjustment_account.internal_id                
             end
@@ -153,7 +151,7 @@ module NetsuiteIntegration
             if adjustment_dept_name.present?
                 adjustment_department=find_by_dept_name(adjustment_dept_name)
                 if adjustment_department.nil?
-                    raise raise "GL Department: #{adjustment_dept_name} not found!"
+                    raise  "GL Department: #{adjustment_dept_name} not found!"
                 else
                     adjustment_dept_id=adjustment_department.internal_id
                 end
@@ -170,7 +168,7 @@ module NetsuiteIntegration
             adjustment.adj_location={internal_id: adjustment_location}
             location={internal_id: adjustment_location}
             adjustment.inventory_list=build_item_list
-            #we can sometime receive adjustments were everything i zero!
+            #we can sometimes receive adjustments were everything is zero!
             if adjustment.inventory_list.inventory.present?
                 adjustment.add
                 if adjustment.errors.any?{|e| "WARN" != e.type}
