@@ -89,7 +89,8 @@ module NetsuiteIntegration
                   receipt_item.item_receive = true
                   
                   if receipt_item.location.internal_id.nil?
-                     receipt_item.location=find_location_by_internal_id(item[:nslocation_id])
+                      byebug
+                     receipt_item.location=find_location_by_internal_id(item[:location])
                   end                   
                   
              else
