@@ -7,7 +7,6 @@ module NetsuiteIntegration
       @config = config
       @over_receipt=false      
       @order_payload = payload[:purchase_order]
-      
       if new_receipt?  
             
             update_po_overreceipt(ns_order)
@@ -96,7 +95,7 @@ module NetsuiteIntegration
     end
 
      def update_po_overreceipt(ns_order)
-         ns_order.item_list.items.each do |order_item|
+                  ns_order.item_list.items.each do |order_item|
                item = order_payload[:line_items].find do |i|  i[:sku] == order_item.item.name end
               if item
                   if   (order_item.quantity.to_i - order_item.quantity_received.to_i)  < item[:received].to_i 
