@@ -5,9 +5,8 @@ module NetsuiteIntegration
     def initialize(config, payload = {})
       super(config, payload)
       @config = config
-      
+      @over_receipt=false      
       @order_payload = payload[:purchase_order]
-
       
       if new_receipt?  
             
@@ -69,9 +68,6 @@ module NetsuiteIntegration
         @receipt_memo ||=order_payload['receipt_memo']
     end
 
-    def over_receipt(status=false)
-        @over_receipt ||= status
-    end
 
     
     def build_item_list   
@@ -85,7 +81,7 @@ module NetsuiteIntegration
             
           
             if  item && item[:received].to_i > 0
-                  receipt_item.quantity = item[:received]
+                  receipt_item.quantity = item[:received].to_i
                   receipt_item.item_receive = true
                   
                   if receipt_item.location.internal_id.nil?                      
@@ -100,17 +96,15 @@ module NetsuiteIntegration
     end
 
      def update_po_overreceipt(ns_order)
-         
          ns_order.item_list.items.each do |order_item|
-               item = order_payload[:line_items].find do |i|  i[:sku] == order_item.item.name
-            end 
+               item = order_payload[:line_items].find do |i|  i[:sku] == order_item.item.name end
               if item
                   if   (order_item.quantity.to_i - order_item.quantity_received.to_i)  < item[:received].to_i 
                       #first overreceipt works free of charge no update required!
                       if order_item.quantity_received.to_i !=0
-                            over_receipt(true)
+                            @over_receipt=true
                             order_item.quantity= 
-                            (order_item.quantity_received.to_i + item[:received].to_i).to_s
+                            (order_item.quantity_received.to_i + item[:received].to_i)
                         end
                   end
                end
@@ -118,7 +112,7 @@ module NetsuiteIntegration
 
           #Update po
           
-          if over_receipt
+          if @over_receipt
               po=NetSuite::Records::PurchaseOrder.new({
               internal_id: ns_order.internal_id,
               external_id: ns_order.external_id  })
