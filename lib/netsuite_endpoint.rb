@@ -56,7 +56,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
         token_secret config.fetch('netsuite_token_secret')
 
         read_timeout 240
-        #log_level    :debug
+        log_level    :info
       end
     end
   end
