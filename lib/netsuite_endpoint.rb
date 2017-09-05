@@ -119,33 +119,40 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   end
 
   post '/add_inventory_adjustment' do
-    
+
     receipt = NetsuiteIntegration::InventoryAdjustment.new(@config, @payload)
     summary = "Netsuite Inventory Adjustment Created "
     result 200, summary
   end
 
   post '/add_purchase_order_receipt' do
-    
+
     receipt = NetsuiteIntegration::PurchaseOrderReceipt.new(@config, @payload)
     summary = "Netsuite Receipt Created "
     result 200, summary
   end
 
   post '/add_transfer_order_receipt' do
-    
+
     receipt = NetsuiteIntegration::TransferOrderReceipt.new(@config, @payload)
     summary = "Netsuite Receipt Created "
     result 200, summary
   end
-  
+
   post '/maintain_inventory_item' do
-    
+
     receipt = NetsuiteIntegration::MaintainInventoryItem.new(@config, @payload)
     summary = "Netsuite Item Created/Updated "
     result 200, summary
   end
-  
+
+  post '/add_gl_journal' do
+
+    receipt = NetsuiteIntegration::GlJournal.new(@config, @payload)
+    summary = "Netsuite GL Journal Created "
+    result 200, summary
+  end
+
 
   post '/get_inventory' do
     begin
