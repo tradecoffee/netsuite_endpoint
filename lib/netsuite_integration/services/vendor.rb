@@ -18,8 +18,6 @@ module NetsuiteIntegration
           NetSuite::Records::Vendor.search({criteria: {basic: basic_criteria.push(polling_filter)},preferences: default_preferences}).results
         end
 
-        NetSuite::Records::Vendor.search({criteria: {basic: basic_criteria},preferences: default_preferences}).results
-
         def default_preferences
           {
             pageSize: 1000,
