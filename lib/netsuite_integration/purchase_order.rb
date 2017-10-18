@@ -33,7 +33,7 @@ module NetsuiteIntegration
             external_id: po.location.external_id,
             internal_id: po.location.internal_id
           },
-          source_location: {} ,
+          source_location: {},
           vendor: {
             name: po.entity.attributes[:name],
             external_id: po.entity.external_id,
@@ -46,11 +46,12 @@ module NetsuiteIntegration
     end
 
     def items(po)
-      po.item_list.items.each_with_index.map do |item, index|
+      po.item_list.items.each_with_index.map do |item, _index|
         {
           itemno: item.item.attributes[:name],
           internal_id: item.item.internal_id,
           description: item.description,
+          closed: item.is_closed,
           quantity: item.quantity,
           unit_price: item.rate,
           vendor: {
