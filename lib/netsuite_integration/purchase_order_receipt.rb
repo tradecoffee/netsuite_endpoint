@@ -121,7 +121,7 @@ module NetsuiteIntegration
         end
         ns_order.update(item_list: attributes[:item_list])
         if ns_order.errors.any? { |e| e.type != 'WARN' }
-          raise "PO over receipt update failed: #{po.errors.map(&:message)}"
+          raise "PO over receipt update failed (business error): #{ns_order.errors.map(&:message)}"
         end
       end
     end
