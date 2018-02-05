@@ -1,0 +1,158 @@
+# frozen_string_literal: true
+
+module NetsuiteIntegration
+  class VendorBill < Base
+    attr_reader :config, :payload, :ns_bill, :bill_payload, :bill
+
+    def initialize(config, payload = {})
+      super(config, payload)
+      @config = config
+      @bill_payload = payload[:vendor_bill]
+
+      if bill_location.nil?
+        #raise 'Location Missing!! Sync vend & netsuite outlets'
+      end
+
+      create_bill
+    end
+
+    def new_bill?
+      new_bill ||= !find_bill_by_external_id(bill_id)
+    end
+
+    def ns_bill
+      @ns_bill ||= NetSuite::Records::VendorBill.get(ns_id)
+    end
+
+    def find_bill_by_external_id(bill_id)
+      NetSuite::Records::VendorBill.get(external_id: bill_id)
+      # Silence the error
+      # We don't care that the record was not found
+    rescue NetSuite::RecordNotFound
+    end
+
+
+    def bill_id
+      @bill_id ||= bill_payload['bill_id']
+    end
+
+    def ns_id
+      @ns_id ||= bill_payload['id']
+    end
+
+    def bill_date
+      @bill_date ||= bill_payload['bill_date']
+    end
+
+    def bill_dept
+      @bill_dept ||= bill_payload['bill_dept']
+    end
+
+    def bill_memo
+      @bill_memo ||= bill_payload['bill_memo']
+    end
+
+    def bill_identifier
+      @bill_identifier ||= bill_payload['bill_identifier']
+    end
+
+    def bill_vendor_name
+      @bill_vendor_name ||= bill_payload['bill_vendor_name']
+    end
+
+    def bill_location
+      @bill_location ||= bill_payload['bill_location']
+    end
+
+    def build_item_list
+      line = 0
+      bill_items = bill_payload[:line_items].map do |item|
+        # do not process zero qty bills
+        next unless item[:quantity].to_i != 0
+        line += 1
+        nsproduct_id = item[:nsproduct_id]
+          if nsproduct_id.nil?
+            # fix correct reference else abort if sku not found!
+            sku = item[:sku]
+            invitem = inventory_item_service.find_by_item_id(sku)
+              if invitem.present?
+                nsproduct_id = invitem.internal_id
+                line_obj = { sku: sku, netsuite_id: invitem.internal_id,
+                            description: invitem.purchase_description }
+                ExternalReference.record :product, sku, { netsuite: line_obj },
+                                        netsuite_id: invitem.internal_id
+              else
+                raise "Error Item/sku missing in Netsuite, please add #{sku}!!"
+              end
+          else
+            invitem = NetSuite::Records::InventoryItem.get(nsproduct_id)
+          end
+
+          NetSuite::Records::VendorBillItem.new(item: { internal_id: nsproduct_id },
+                                                              line: line,
+                                                              rate: item[:cost]&.to_i,
+                                                              quantity: item[:quantity]&.to_i,
+                                                              department: {internal_id: bill_dept},
+                                                              location: { internal_id: bill_location })
+
+        end
+      NetSuite::Records::VendorBillItemList.new(replace_all: true,item: bill_items.compact)
+    end
+
+    def inventory_item_service
+      @inventory_item_service ||= NetsuiteIntegration::Services::InventoryItem.new(@config)
+    end
+
+    def create_bill
+      if new_bill?
+        # internal numbers differ between platforms
+
+        if bill_vendor_name.present?
+           vendor_name = find_vendor_by_name(bill_vendor_name)
+           if vendor_name.nil?
+             raise "Vendor : #{bill_vendor_name} not found!"
+           else
+             vendor_id = vendor_name.internal_id
+           end
+        end
+
+        @bill = NetSuite::Records::VendorBill.new
+        bill.external_id = bill_id
+        bill.memo = bill_memo
+        bill.tran_id = bill_id
+        bill.entity = { internal_id: vendor_id }
+        bill.tran_date = NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
+
+        bill.item_list = build_item_list
+        # we can sometimes receive bills were everything is zero!
+        if bill.item_list.item.present?
+          bill.add
+          if bill.errors.any? { |e| e.type != 'WARN' }
+            raise "bill create failed: #{bill.errors.map(&:message)}"
+          else
+            line_item = { bill_id: bill_id,
+                          netsuite_id: bill.internal_id,
+                          description: bill_memo,
+                          type: 'vendor_bill' }
+
+              ExternalReference.record :vendor_bill,
+                                       bill_id,
+                                       { netsuite: line_item },
+                                       netsuite_id: bill.internal_id
+
+          end
+        end
+      end
+    end
+
+    def find_vendor_by_name(name)
+      NetSuite::Records::Vendor.search(criteria: {
+                                         basic: [{
+                                           field: 'entityId',
+                                           value: name,
+                                           operator: 'contains'
+                                         }]
+                                       }).results.first
+    end
+ end
+end

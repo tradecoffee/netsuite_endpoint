@@ -7,11 +7,7 @@ module NetsuiteIntegration
     def initialize(config, payload = {})
       super(config, payload)
       @config = config
-      @adjustment_payload = if transfer_order?
-                              payload[:transfer_order]
-                            elsif register_sale?
-                              payload[:register_sale]
-                            elsif sales_inv_adjustment?
+      @adjustment_payload = if sales_inv_adjustment?
                               payload[:sales_inv_adjustment]
                             else
                               payload[:inventory_adjustment]
