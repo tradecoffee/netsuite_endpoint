@@ -22,22 +22,18 @@ module NetsuiteIntegration
                     inventory_item_service.find_by_item_id(sku)
                   end
 
-
-      item =    if existing.present?
-                  # if expense account is blank then its an inventory item
-                  noninventory_item = !existing.expense_account.attributes.blank?
-                  if (sku_type == 'expense' && !noninventory_item ) ||
-                     (sku_type != 'expense' && noninventory_item )
-                    #raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
-                  end
-                  if noninventory_item
-                    find_noninvitem_by_id(existing.internal_id)
-                  else item=existing
-                  end
+      item = if existing.present?
+               # if expense account is blank then its an inventory item
+               noninventory_item = !existing.expense_account.attributes.blank?
+               if (sku_type == 'expense' && !noninventory_item) ||
+                  (sku_type != 'expense' && noninventory_item)
+                 # raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
+               end
+               if noninventory_item
+                 find_noninvitem_by_id(existing.internal_id)
+               else item = existing
+               end
                 end
-
-
-
 
       if !item.present?
         item = if sku_type == 'expense'
@@ -45,7 +41,7 @@ module NetsuiteIntegration
                    item_id: sku,
                    external_id: ext_id,
                    tax_schedule: { internal_id: taxschedule },
-                   expense_account: {internal_id: dropship_account},
+                   expense_account: { internal_id: dropship_account },
                    upc_code: sku,
                    vendor_name: description[0, 60],
                    purchase_description: description,
@@ -68,7 +64,7 @@ module NetsuiteIntegration
           item_id: sku,
           external_id: ext_id,
           tax_schedule: { internal_id: taxschedule },
-          expense_account: {internal_id: dropship_account},
+          expense_account: { internal_id: dropship_account },
           upc_code: sku,
           vendor_name: description[0, 60],
           purchase_description: description,
@@ -103,7 +99,7 @@ module NetsuiteIntegration
     end
 
     def description
-      @description ||= inventoryitem_payload['description']
+      @description ||= inventoryitem_payload['name']
     end
 
     def ns_id

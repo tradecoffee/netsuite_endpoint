@@ -2,7 +2,7 @@
 
 module NetsuiteIntegration
   class VendorBill < Base
-    attr_reader :config, :payload, :ns_bill, :bill_payload, :bill
+    attr_reader :config, :payload,  :bill_payload, :bill
 
     def initialize(config, payload = {})
       super(config, payload)
@@ -18,10 +18,6 @@ module NetsuiteIntegration
 
     def new_bill?
       new_bill ||= !find_bill_by_external_id(bill_id)
-    end
-
-    def ns_bill
-      @ns_bill ||= NetSuite::Records::VendorBill.get(ns_id)
     end
 
     def find_bill_by_external_id(bill_id)
@@ -52,12 +48,12 @@ module NetsuiteIntegration
       @bill_memo ||= bill_payload['bill_memo']
     end
 
-    def bill_identifier
-      @bill_identifier ||= bill_payload['bill_identifier']
-    end
-
     def bill_vendor_name
       @bill_vendor_name ||= bill_payload['bill_vendor_name']
+    end
+
+    def bill_vendor_id
+      @bill_vendor_id ||= bill_payload['bill_vendor_id']
     end
 
     def bill_location
@@ -107,13 +103,15 @@ module NetsuiteIntegration
       if new_bill?
         # internal numbers differ between platforms
 
-        if bill_vendor_name.present?
-           vendor_name = find_vendor_by_name(bill_vendor_name)
-           if vendor_name.nil?
-             raise "Vendor : #{bill_vendor_name} not found!"
-           else
-             vendor_id = vendor_name.internal_id
-           end
+        if !bill_vendor_id.nil?
+            vendor_id = bill_vendor_id
+        else
+            vendor = find_vendor_by_name(bill_vendor_name)
+            if vendor.nil?
+              raise "Vendor : #{bill_vendor_name} not found!"
+            else
+              vendor_id = vendor.internal_id
+            end
         end
 
         @bill = NetSuite::Records::VendorBill.new
