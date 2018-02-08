@@ -6,15 +6,14 @@ module NetsuiteIntegration
       super(config, payload)
       @config = config
 
-      @vendor_payload = payload[:vendor]
+      @vendor_payload = payload[:supplier]
 
       # always find vendor using internal id incase of vendor rename
       vendor = if !ns_id.nil?
-                   find_by_id(ns_id)
-                 else
-                   find_by_name(company_name)
-             end
-
+                 find_by_id(ns_id)
+               else
+                 find_by_name(company_name)
+               end
 
       if vendor.blank?
         vendor = NetSuite::Records::Vendor.new(
@@ -55,7 +54,7 @@ module NetsuiteIntegration
         raise "Vendor Update/create failed: #{vendor.errors.map(&:message)}"
       else
         xdata = { company_name: company_name, netsuite_id: vendor.internal_id }
-        ExternalReference.record :vendor, id, { netsuite: xdata },
+        ExternalReference.record :supplier, company_name, { netsuite: xdata },
                                  netsuite_id: vendor.internal_id
       end
     end
@@ -68,11 +67,9 @@ module NetsuiteIntegration
       @company_name = vendor_payload['company_name']
     end
 
-
     def ns_id
       @ns_id = vendor_payload['ns_id']
     end
-
 
     def find_by_id(ns_id)
       NetSuite::Records::Vendor.get(internal_id: ns_id)
