@@ -54,7 +54,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
         consumer_secret config.fetch('netsuite_consumer_secret')
         token_id config.fetch('netsuite_token_id')
         token_secret config.fetch('netsuite_token_secret')
-        wsdl_domain  ENV['NETSUITE_WSDL_DOMAIN'] || 'webservices.na1.netsuite.com'
+        wsdl_domain  ENV['NETSUITE_WSDL_DOMAIN'] || 'system.netsuite.com'
 
         read_timeout 240
         log_level    :info
@@ -88,15 +88,7 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   fetch_endpoint '/get_vendors', NetsuiteIntegration::Vendor, "vendor"
 
 
-  post '/add_inventory_adjustment' do
-
-    receipt = NetsuiteIntegration::InventoryAdjustment.new(@config, @payload)
-    summary = "Netsuite Inventory Adjustment Created "
-    result 200, summary
-  end
-
-
-  post '/maintain_inventory_item' do
+   post '/maintain_inventory_item' do
     receipt = NetsuiteIntegration::MaintainInventoryItem.new(@config, @payload)
     summary = "Netsuite Item Created/Updated "
     result 200, summary
