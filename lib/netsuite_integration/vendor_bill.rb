@@ -29,35 +29,35 @@ module NetsuiteIntegration
 
 
     def bill_id
-      @bill_id ||= bill_payload['bill_id']
+      bill_payload['bill_id']
     end
 
     def ns_id
-      @ns_id ||= bill_payload['id']
+      bill_payload['id']
     end
 
     def bill_date
-      @bill_date ||= bill_payload['bill_date']
+      bill_payload['bill_date']
     end
 
     def bill_dept
-      @bill_dept ||= bill_payload['bill_dept']
+      bill_payload['bill_dept']
     end
 
     def bill_memo
-      @bill_memo ||= bill_payload['bill_memo']
+      bill_payload['bill_memo']
     end
 
     def bill_vendor_name
-      @bill_vendor_name ||= bill_payload['bill_vendor_name']
+      bill_payload['bill_vendor_name']
     end
 
     def bill_vendor_id
-      @bill_vendor_id ||= bill_payload['bill_vendor_id']
+      bill_payload['bill_vendor_id']
     end
 
     def bill_location
-      @bill_location ||= bill_payload['bill_location']
+      bill_payload['bill_location']
     end
 
     def build_item_list

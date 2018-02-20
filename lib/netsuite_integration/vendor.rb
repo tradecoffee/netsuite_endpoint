@@ -16,7 +16,7 @@ module NetsuiteIntegration
     end
 
     def vendors
-      collection.map do |vendor|       
+      collection.map do |vendor|
         {
           id: vendor.entity_id,
           internal_id: vendor.internal_id,
