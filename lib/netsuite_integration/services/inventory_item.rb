@@ -66,6 +66,15 @@ module NetsuiteIntegration
           ['_inventoryItem','_nonInventoryItem','assembly']
         end
       end
+	  
+	  def find_by_internal_id(id)
+        NetSuite::Records::InventoryItem.search(criteria:
+        { basic: [{ field: 'internalIdNumber',
+                    operator: 'equalTo',
+                    type: 'SearchLongField',
+                    value: id }] },
+                                                preferences: default_preferences).results.first
+      end
 
       private
         def valid_items
