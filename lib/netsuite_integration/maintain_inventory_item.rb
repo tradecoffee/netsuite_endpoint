@@ -17,26 +17,20 @@ module NetsuiteIntegration
 
       # always find sku using internal id incase of sku rename
       existing =  if !ns_id.nil?
-                    find_noninvitem_by_id(ns_id) || find_invitem_by_id(ns_id)
+                    inventory_item_service.find_by_internal_id(id)
                   else
                     inventory_item_service.find_by_item_id(sku)
                   end
 
       item = if existing.present?
                # if expense account is blank then its an inventory item
-               noninventory_item = !existing.expense_account.attributes.blank?
-               if (sku_type == 'expense' && !noninventory_item) ||
-                  (sku_type != 'expense' && noninventory_item)
-                 # raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
-               end
-               if noninventory_item
-                 find_noninvitem_by_id(existing.internal_id)
-               else item = existing
-               end
-                end
+                  if expense_sku? && item.record_type.include?('InventoryItem')
+                      raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
+                  end
+              end
 
       if !item.present?
-        item = if sku_type == 'expense'
+        item = if expense_sku?
                  NetSuite::Records::NonInventoryResaleItem.new(
                    item_id: sku,
                    external_id: ext_id,
@@ -59,17 +53,27 @@ module NetsuiteIntegration
                  )
                end
         item.add
-      else
-        item.update(
-          item_id: sku,
-          external_id: ext_id,
-          tax_schedule: { internal_id: taxschedule },
-          expense_account: { internal_id: dropship_account },
-          upc_code: sku,
-          vendor_name: description[0, 60],
-          purchase_description: description,
-          stock_description: description[0, 21]
-        )
+      elsif item.record_type.include?('NonInventorySaleItem')
+            item.update(
+              item_id: sku,
+              external_id: ext_id,
+              tax_schedule: { internal_id: taxschedule },
+              expense_account: { internal_id: dropship_account },
+              upc_code: sku,
+              vendor_name: description[0, 60],
+              purchase_description: description,
+              stock_description: description[0, 21]
+            )
+      elsif item.record_type.include?('InventoryItem')
+            item.update(
+              item_id: sku,
+              external_id: ext_id,
+              tax_schedule: { internal_id: taxschedule },
+              upc_code: sku,
+              vendor_name: description[0, 60],
+              purchase_description: description,
+              stock_description: description[0, 21]
+            )
       end
 
       if item.errors.any? { |e| e.type != 'WARN' }
@@ -83,27 +87,27 @@ module NetsuiteIntegration
     end
 
     def sku
-      @sku ||= inventoryitem_payload['sku']
+        inventoryitem_payload['sku']
     end
 
-    def sku_type
-      @sku_type ||= inventoryitem_payload['sku_type']
+    def expense_sku?
+		    inventoryitem_payload['sku_type']=='expense'
     end
 
     def taxschedule
-      @taxschedule ||= inventoryitem_payload['tax_type']
+        inventoryitem_payload['tax_type']
     end
 
     def dropship_account
-      @dropship_account ||= inventoryitem_payload['dropship_account']
+        inventoryitem_payload['dropship_account']
     end
 
     def description
-      @description ||= inventoryitem_payload['name']
+        inventoryitem_payload['name']
     end
 
     def ns_id
-      @ns_id ||= inventoryitem_payload['ns_id']
+     inventoryitem_payload['ns_id']
     end
 
     def inventory_item_service
@@ -111,18 +115,5 @@ module NetsuiteIntegration
                                   .new(@config)
     end
 
-    def find_invitem_by_id(ns_id)
-      NetSuite::Records::InventoryItem.get(internal_id: ns_id)
-      # Silence the error
-      # We don't care that the record was not found
-    rescue NetSuite::RecordNotFound
-    end
-
-    def find_noninvitem_by_id(ns_id)
-      NetSuite::Records::NonInventoryResaleItem.get(internal_id: ns_id)
-      # Silence the error
-      # We don't care that the record was not found
-    rescue NetSuite::RecordNotFound
-    end
   end
 end

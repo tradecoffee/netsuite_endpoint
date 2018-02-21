@@ -92,6 +92,7 @@ module NetsuiteIntegration
                                                               location: { internal_id: bill_location })
 
         end
+        #merge Items
       NetSuite::Records::VendorBillItemList.new(replace_all: true,item: bill_items.compact)
     end
 
