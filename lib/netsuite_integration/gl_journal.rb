@@ -22,7 +22,7 @@ module NetsuiteIntegration
     end
 
     def journal_id
-      ournal_payload['journal_id'].to_s
+      journal_payload['journal_id'].to_s
     end
 
     def ns_id

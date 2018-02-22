@@ -17,7 +17,7 @@ module NetsuiteIntegration
 
       # always find sku using internal id incase of sku rename
       existing =  if !ns_id.nil?
-                    inventory_item_service.find_by_internal_id(id)
+                    inventory_item_service.find_by_internal_id(ns_id)
                   else
                     inventory_item_service.find_by_item_id(sku)
                   end
