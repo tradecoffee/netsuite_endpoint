@@ -63,10 +63,10 @@ module NetsuiteIntegration
             end
           end
         else
-          ['_inventoryItem','_nonInventoryItem','assembly']
+          %w[_inventoryItem _nonInventoryItem _assembly]
         end
       end
-	  
+
 	  def find_by_internal_id(id)
         NetSuite::Records::InventoryItem.search(criteria:
         { basic: [{ field: 'internalIdNumber',

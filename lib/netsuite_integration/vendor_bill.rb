@@ -8,11 +8,6 @@ module NetsuiteIntegration
       super(config, payload)
       @config = config
       @bill_payload = payload[:vendor_bill]
-
-      if bill_location.nil?
-        #raise 'Location Missing!! Sync vend & netsuite outlets'
-      end
-
       create_bill
     end
 
@@ -26,7 +21,6 @@ module NetsuiteIntegration
       # We don't care that the record was not found
     rescue NetSuite::RecordNotFound
     end
-
 
     def bill_id
       bill_payload['bill_id']
