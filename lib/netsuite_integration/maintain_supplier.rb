@@ -10,7 +10,7 @@ module NetsuiteIntegration
 
       # always find vendor using internal id incase of vendor rename
       vendor = if !ns_id.nil?
-                 find_by_id(ns_id)
+                 find_by_id(ns_id) || find_by_ext_id(id)
                else
                  find_by_name(company_name)
                end
@@ -51,7 +51,7 @@ module NetsuiteIntegration
       end
 
       if vendor.errors.any? { |e| e.type != 'WARN' }
-        raise "Vendor Update/create failed: #{vendor.errors.map(&:message)}"
+          raise "Vendor Update/create failed: #{vendor.errors.map(&:message)}"
       else
         xdata = { company_name: company_name, netsuite_id: vendor.internal_id }
         ExternalReference.record :supplier, company_name, { netsuite: xdata },
@@ -71,8 +71,15 @@ module NetsuiteIntegration
       @ns_id = vendor_payload['ns_id']
     end
 
-    def find_by_id(ns_id)
-      NetSuite::Records::Vendor.get(internal_id: ns_id)
+    def find_by_id(id)
+      NetSuite::Records::Vendor.get(internal_id: id)
+      # Silence the error
+      # We don't care that the record was not found
+    rescue NetSuite::RecordNotFound
+    end
+
+    def find_by_ext_id(id)
+      NetSuite::Records::Vendor.get(external_id: id)
       # Silence the error
       # We don't care that the record was not found
     rescue NetSuite::RecordNotFound

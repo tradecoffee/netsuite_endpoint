@@ -57,8 +57,8 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
         wsdl_domain  ENV['NETSUITE_WSDL_DOMAIN'] || 'system.netsuite.com'
 
         read_timeout 240
-        #log_level    :info
-        log_level    :debug
+        log_level    :info
+        #log_level    :debug
       end
     end
   end
@@ -90,28 +90,28 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
 
 
    post '/maintain_inventory_item' do
-    receipt = NetsuiteIntegration::MaintainInventoryItem.new(@config, @payload)
+    NetsuiteIntegration::MaintainInventoryItem.new(@config, @payload)
     summary = "Netsuite Item Created/Updated "
     result 200, summary
   end
 
   post '/maintain_supplier' do
-    receipt = NetsuiteIntegration::MaintainSupplier.new(@config, @payload)
+    NetsuiteIntegration::MaintainSupplier.new(@config, @payload)
     summary = "Netsuite Vendor Created/Updated "
     result 200, summary
   end
 
   post '/add_gl_journal' do
-
-    receipt = NetsuiteIntegration::GlJournal.new(@config, @payload)
+    NetsuiteIntegration::GlJournal.new(@config, @payload)
     summary = "Netsuite GL Journal Created "
     result 200, summary
   end
 
   post '/add_vendor_bill' do
-
-    receipt = NetsuiteIntegration::VendorBill.new(@config, @payload)
+    message = NetsuiteIntegration::VendorBill.new(@config, @payload)
     summary = "Netsuite AP Bill Created "
+    add_object 'vendorbill_xref', {id: message.bill.internal_id, bill_id: message.bill_payload['bill_id'], shipment_id: message.bill_payload['bill_shipment_ids']}
     result 200, summary
   end
+
 end
