@@ -8,6 +8,19 @@ module NetsuiteIntegration
 
       @inventoryitem_payload = payload[:product]
 
+      inventoryitem_payload['sku'].map do |line_item|
+        add_sku(line_item)
+      end
+    end
+
+    def add_sku(line_item)
+      sku=line_item['sku']
+      expense_sku = line_item['sku_type'] == 'expense'
+      taxschedule=line_item['tax_type']
+      dropship_account=line_item['dropship_account']
+      description=line_item['name']
+      ns_id=line_item['ns_id']
+
       # awlays keep external_id in numeric format
       ext_id = if sku.is_a? Numeric
                  sku.to_i
@@ -24,14 +37,14 @@ module NetsuiteIntegration
 
       if item.present?
         # if expense account is blank then its an inventory item
-        if expense_sku? &&
+        if expense_sku &&
            item.record_type.equal?('InventoryItem')
           raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
         end
       end
 
       if !item.present?
-        item = if expense_sku?
+        item = if expense_sku
                  NetSuite::Records::NonInventoryResaleItem.new(
                    item_id: sku,
                    external_id: ext_id,
@@ -85,35 +98,13 @@ module NetsuiteIntegration
         ExternalReference.record :product, sku, { netsuite: line_item },
                                  netsuite_id: item.internal_id
       end
-    end
 
-    def sku
-      inventoryitem_payload['sku']
-    end
+  end
 
-    def expense_sku?
-      inventoryitem_payload['sku_type'] == 'expense'
-    end
+  def inventory_item_service
+    @inventory_item_service ||= NetsuiteIntegration::Services::InventoryItem
+                                .new(@config)
+  end
 
-    def taxschedule
-      inventoryitem_payload['tax_type']
-    end
-
-    def dropship_account
-      inventoryitem_payload['dropship_account']
-    end
-
-    def description
-      inventoryitem_payload['name']
-    end
-
-    def ns_id
-      inventoryitem_payload['ns_id']
-    end
-
-    def inventory_item_service
-      @inventory_item_service ||= NetsuiteIntegration::Services::InventoryItem
-                                  .new(@config)
-    end
   end
 end
