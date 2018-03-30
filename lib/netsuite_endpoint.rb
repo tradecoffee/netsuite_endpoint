@@ -110,7 +110,9 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
   post '/add_vendor_bill' do
     message = NetsuiteIntegration::VendorBill.new(@config, @payload)
     summary = "Netsuite AP Bill Created "
-    add_object 'vendorbill_xref', {id: message.bill.internal_id, bill_id: message.bill_payload['bill_id'], shipment_id: message.bill_payload['bill_shipment_ids']}
+    if message.bill.present?
+      add_object 'vendorbill_xref', {id: message.bill.internal_id, bill_id: message.bill_payload['bill_id'], shipment_id: message.bill_payload['bill_shipment_ids']}
+    end
     result 200, summary
   end
 
