@@ -38,6 +38,14 @@ module NetsuiteIntegration
       bill_payload['bill_dept']
     end
 
+    def bill_ap_acct
+      bill_payload['bill_ap_acct']
+    end
+
+    def bill_init_status
+      bill_payload['bill_init_status']
+    end
+
     def bill_memo
       bill_payload['bill_memo']
     end
@@ -112,7 +120,9 @@ module NetsuiteIntegration
         @bill = NetSuite::Records::VendorBill.new
         bill.external_id = bill_id
         bill.memo = bill_memo
+        bill.account = { internal_id: bill_ap_acct }
         bill.tran_id = bill_id
+        bill.approval_status= { internal_id: bill_init_status}
         bill.entity = { internal_id: vendor_id }
         bill.tran_date = NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
 
