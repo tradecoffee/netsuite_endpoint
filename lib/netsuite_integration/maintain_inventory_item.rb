@@ -35,6 +35,9 @@ module NetsuiteIntegration
                inventory_item_service.find_by_item_id(sku)
              end
 
+      # exit if no changes limit tye amout of nestuite calls/changes
+      stock_desc=description.rstrip[0,21]
+
       if item.present?
         # if expense account is blank then its an inventory item
         if expense_sku &&
@@ -53,7 +56,7 @@ module NetsuiteIntegration
                    upc_code: sku,
                    vendor_name: description[0, 60],
                    purchase_description: description,
-                   stock_description: description[0, 21]
+                   stock_description: stock_desc
                  )
                else
                  NetSuite::Records::InventoryItem.new(
@@ -63,31 +66,36 @@ module NetsuiteIntegration
                    upc_code: sku,
                    vendor_name: description[0, 60],
                    purchase_description: description,
-                   stock_description: description[0, 21]
+                   stock_description: stock_desc
                  )
                end
         item.add
-      elsif item.record_type.equal?('NonInventorySaleItem')
-        item.update(
-          item_id: sku,
-          external_id: ext_id,
-          tax_schedule: { internal_id: taxschedule },
-          expense_account: { internal_id: dropship_account },
-          upc_code: sku,
-          vendor_name: description[0, 60],
-          purchase_description: description,
-          stock_description: description[0, 21]
-        )
-      elsif item.record_type.equal?('InventoryItem')
-        item.update(
-          item_id: sku,
-          external_id: ext_id,
-          tax_schedule: { internal_id: taxschedule },
-          upc_code: sku,
-          vendor_name: description[0, 60],
-          purchase_description: description,
-          stock_description: description[0, 21]
-        )
+      elsif item.present? &&
+            (stock_desc!=item.stock_description ||
+            sku!=item.item_id ||
+            ns_id!=item.internal_id )
+            if item.record_type.equal?('NonInventorySaleItem')
+              item.update(
+                item_id: sku,
+                external_id: ext_id,
+                tax_schedule: { internal_id: taxschedule },
+                expense_account: { internal_id: dropship_account },
+                upc_code: sku,
+                vendor_name: description[0, 60],
+                purchase_description: description,
+                stock_description: stock_desc
+              )
+            elsif item.record_type.equal?('InventoryItem')
+              item.update(
+                item_id: sku,
+                external_id: ext_id,
+                tax_schedule: { internal_id: taxschedule },
+                upc_code: sku,
+                vendor_name: description[0, 60],
+                purchase_description: description,
+                stock_description: stock_desc
+              )
+            end
     end
 
       if item.errors.present? { |e| e.type != 'WARN' }
