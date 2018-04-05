@@ -1,3 +1,4 @@
+
 module NetsuiteIntegration
   class MaintainInventoryItem < Base
     attr_reader :config, :payload, :ns_inventoryitem, :inventoryitem_payload
@@ -13,20 +14,28 @@ module NetsuiteIntegration
       end
     end
 
-    def add_sku(line_item)
-      sku=line_item['sku']
-      expense_sku = line_item['sku_type'] == 'expense'
-      taxschedule=line_item['tax_type']
-      dropship_account=line_item['dropship_account']
-      description=line_item['name']
-      ns_id=line_item['ns_id']
+    def sku_needs_upd(line_item)
+      ref = ExternalReference.products.find_by_external_id(solidus_id: line_item['id'].to_i)
+                             .try!(:object)
+      sku_needs_upd = if ref.nil? ||
+                         ref['netsuite'].nil? ||
+                         ref['netsuite']['sku'] != line_item['sku'] ||
+                         ref['netsuite']['description'] != line_item['name']
+                        true
+                      else false
+                      end
+    end
 
-      # awlays keep external_id in numeric format
-      ext_id = if sku.is_a? Numeric
-                 sku.to_i
-               else
-                 sku
-               end
+    def add_sku(line_item)
+      # exit out prevent netsuite calls as it .... they are to expensive!
+      return unless sku_needs_upd(line_item)
+
+      sku = line_item['sku']
+      expense_sku = line_item['sku_type'] == 'expense'
+      taxschedule = line_item['tax_type']
+      dropship_account = line_item['dropship_account']
+      description = line_item['name']
+      ns_id = line_item['ns_id']
 
       # always find sku using internal id incase of sku rename
       item = if !ns_id.nil?
@@ -36,7 +45,7 @@ module NetsuiteIntegration
              end
 
       # exit if no changes limit tye amout of nestuite calls/changes
-      stock_desc=description.rstrip[0,21]
+      stock_desc = description.rstrip[0, 21]
 
       if item.present?
         # if expense account is blank then its an inventory item
@@ -50,7 +59,7 @@ module NetsuiteIntegration
         item = if expense_sku
                  NetSuite::Records::NonInventoryResaleItem.new(
                    item_id: sku,
-                   external_id: ext_id,
+                   external_id: sku,
                    tax_schedule: { internal_id: taxschedule },
                    expense_account: { internal_id: dropship_account },
                    upc_code: sku,
@@ -71,31 +80,31 @@ module NetsuiteIntegration
                end
         item.add
       elsif item.present? &&
-            (stock_desc!=item.stock_description ||
-            sku!=item.item_id ||
-            ns_id!=item.internal_id )
-            if item.record_type.equal?('NonInventorySaleItem')
-              item.update(
-                item_id: sku,
-                external_id: ext_id,
-                tax_schedule: { internal_id: taxschedule },
-                expense_account: { internal_id: dropship_account },
-                upc_code: sku,
-                vendor_name: description[0, 60],
-                purchase_description: description,
-                stock_description: stock_desc
-              )
-            elsif item.record_type.equal?('InventoryItem')
-              item.update(
-                item_id: sku,
-                external_id: ext_id,
-                tax_schedule: { internal_id: taxschedule },
-                upc_code: sku,
-                vendor_name: description[0, 60],
-                purchase_description: description,
-                stock_description: stock_desc
-              )
-            end
+            (stock_desc != item.stock_description ||
+            sku != item.item_id ||
+            ns_id != item.internal_id)
+        if item.record_type.equal?('NonInventorySaleItem')
+          item.update(
+            item_id: sku,
+            external_id: ext_id,
+            tax_schedule: { internal_id: taxschedule },
+            expense_account: { internal_id: dropship_account },
+            upc_code: sku,
+            vendor_name: description[0, 60],
+            purchase_description: description,
+            stock_description: stock_desc
+          )
+        elsif item.record_type.equal?('InventoryItem')
+          item.update(
+            item_id: sku,
+            external_id: ext_id,
+            tax_schedule: { internal_id: taxschedule },
+            upc_code: sku,
+            vendor_name: description[0, 60],
+            purchase_description: description,
+            stock_description: stock_desc
+          )
+        end
     end
 
       if item.errors.present? { |e| e.type != 'WARN' }
@@ -106,13 +115,11 @@ module NetsuiteIntegration
         ExternalReference.record :product, sku, { netsuite: line_item },
                                  netsuite_id: item.internal_id
       end
-
   end
 
-  def inventory_item_service
-    @inventory_item_service ||= NetsuiteIntegration::Services::InventoryItem
-                                .new(@config)
-  end
-
-  end
+    def inventory_item_service
+      @inventory_item_service ||= NetsuiteIntegration::Services::InventoryItem
+                                  .new(@config)
+    end
+ end
 end
