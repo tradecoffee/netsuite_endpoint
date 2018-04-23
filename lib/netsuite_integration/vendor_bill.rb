@@ -88,7 +88,7 @@ module NetsuiteIntegration
 
           NetSuite::Records::VendorBillItem.new(item: { internal_id: nsproduct_id },
                                                               line: line,
-                                                              rate: item[:cost]&.to_i,
+                                                              rate: item[:cost]&.to_f,
                                                               quantity: item[:quantity]&.to_i,
                                                               department: {internal_id: bill_dept},
                                                               location: { internal_id: bill_location })
