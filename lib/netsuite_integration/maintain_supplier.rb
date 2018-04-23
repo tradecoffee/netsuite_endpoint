@@ -22,7 +22,7 @@ module NetsuiteIntegration
           external_id: id,
           email: vendor_payload['email'],
           first_name: vendor_payload['first_name'],
-          category: {internal_id: 7},
+          category: {internal_id: vendor_payload['vendor_category']},
           last_name: vendor_payload['last_name'],
           billaddr1: vendor_payload['address1'],
           billaddr2: vendor_payload['address2'],
@@ -34,21 +34,14 @@ module NetsuiteIntegration
         )
         vendor.add
       else
+        #do not change address,category as ap may have overwritten it
         vendor.update(
           company_name: company_name,
           entityid: company_name,
           external_id: id,
           email: vendor_payload['email'],
           first_name: vendor_payload['first_name'],
-          last_name: vendor_payload['last_name'],
-          billaddr1: vendor_payload['address1'],
-          billaddr2: vendor_payload['address2'],
-          billcity: vendor_payload['billcity'],
-          category: {internal_id: 7},
-          billstate: vendor_payload['billstate'],
-          billzip: vendor_payload['billzip'],
-          billcountry: vendor_payload['billcountry'],
-          phone: vendor_payload['phone']
+          last_name: vendor_payload['last_name']
         )
       end
 
