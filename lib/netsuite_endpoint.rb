@@ -116,4 +116,10 @@ class NetsuiteEndpoint < EndpointBase::Sinatra::Base
     result 200, summary
   end
 
+  post '/add_vendor_credit' do
+    message = NetsuiteIntegration::VendorCredit.new(@config, @payload)
+    summary = "Netsuite AP Credit Created "
+    result 200, summary
+  end
+
 end
