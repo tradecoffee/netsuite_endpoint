@@ -26,9 +26,6 @@ module NetsuiteIntegration
       bill_payload['bill_id']
     end
 
-    def ns_id
-      bill_payload['id']
-    end
 
     def bill_date
       bill_payload['bill_date']
@@ -40,6 +37,10 @@ module NetsuiteIntegration
 
     def bill_ap_acct
       bill_payload['bill_ap_acct']
+    end
+
+    def bill_type
+      bill_payload['bill_type']
     end
 
     def bill_init_status
@@ -125,9 +126,15 @@ module NetsuiteIntegration
         bill.approval_status= { internal_id: bill_init_status}
         bill.entity = { internal_id: vendor_id }
         bill.tran_date = NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
-
         bill.item_list = build_item_list
-        # we can sometimes receive bills were everything is zero!
+        if bill_type == 'DS-CC'
+          bill_type_id = 2
+        else
+          bill_type_id = 1
+        end
+        bill.custom_field_list.custbodyinvoice_type={:name=>bill_type,:internal_id=>bill_type_id,:type_id=>134}
+
+          # we can sometimes receive bills were everything is zero!
         if bill.item_list.item.present?
           bill.add
           if bill.errors.any? { |e| e.type != 'WARN' }

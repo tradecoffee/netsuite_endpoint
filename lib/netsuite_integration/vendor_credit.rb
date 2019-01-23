@@ -5,8 +5,7 @@ module NetsuiteIntegration
       def initialize(config, payload = {})
         super(config, payload)
         @config = config
-        @bill_payload = payload[:vendor_bill]
-        byebug
+        @bill_payload = payload[:vendor_credit]
         create_bill
       end
 
@@ -22,11 +21,11 @@ module NetsuiteIntegration
       end
 
       def bill_id
-        bill_payload['bill_id']
+        bill_payload['bill_id'].upcase
       end
 
-      def ns_id
-        bill_payload['id']
+      def bill_type
+        bill_payload['bill_type']
       end
 
       def bill_date
@@ -64,8 +63,9 @@ module NetsuiteIntegration
       def build_item_list
         line = 0
         bill_items = bill_payload[:line_items].map do |item|
-          # do not process zero qty bills
-          next unless item[:quantity].to_i != 0
+          # do not process zero qty/cost bills
+          next unless item[:quantity].to_i != 0 ||
+                      item[:cost].to_i != 0
           line += 1
           nsproduct_id = item[:nsproduct_id]
             if nsproduct_id.nil?
@@ -115,17 +115,22 @@ module NetsuiteIntegration
                 vendor_id = vendor.internal_id
               end
           end
-byebug
-          @bill = NetSuite::Records::VendorCredit.new
+
+          bill = NetSuite::Records::VendorCredit.new
           bill.external_id = bill_id
           bill.memo = bill_memo
           bill.account = { internal_id: bill_ap_acct }
           bill.tran_id = bill_id
-          bill.approval_status= { internal_id: bill_init_status}
           bill.entity = { internal_id: vendor_id }
           bill.tran_date = NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
-
           bill.item_list = build_item_list
+          if bill_type == 'DS-CC'
+            bill_type_id = 2
+          else
+            bill_type = 'DS'
+            bill_type_id = 1
+          end
+          bill.custom_field_list.custbodyinvoice_type={:name=>bill_type,:internal_id=>bill_type_id,:type_id=>134}
           # we can sometimes receive bills were everything is zero!
           if bill.item_list.item.present?
             bill.add
@@ -135,9 +140,9 @@ byebug
               line_item = { bill_id: bill_id,
                             netsuite_id: bill.internal_id,
                             description: bill_memo,
-                            type: 'vendor_bill' }
+                            type: 'vendor_credit' }
 
-                ExternalReference.record :vendor_bill,
+                ExternalReference.record :vendor_credit,
                                          bill_id,
                                          { netsuite: line_item },
                                          netsuite_id: bill.internal_id

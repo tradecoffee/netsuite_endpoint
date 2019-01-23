@@ -96,7 +96,7 @@ module NetsuiteIntegration
 
         def default_preferences
           {
-            pageSize: 80,
+            pageSize: 1000,
             bodyFieldsOnly: false
           }
         end
