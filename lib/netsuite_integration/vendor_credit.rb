@@ -122,7 +122,7 @@ module NetsuiteIntegration
           bill.account = { internal_id: bill_ap_acct }
           bill.tran_id = bill_id
           bill.entity = { internal_id: vendor_id }
-          bill.tran_date = NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
+          bill.tran_date = bill_date
           bill.item_list = build_item_list
           if bill_type == 'DS-CC'
             bill_type_id = 2
