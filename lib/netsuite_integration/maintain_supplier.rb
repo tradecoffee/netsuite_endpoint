@@ -38,10 +38,7 @@ module NetsuiteIntegration
         vendor.update(
           company_name: company_name,
           entityid: company_name,
-          external_id: id,
-          email: vendor_payload['email'],
-          first_name: vendor_payload['first_name'],
-          last_name: vendor_payload['last_name']
+          external_id: id
         )
       end
 
