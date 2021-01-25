@@ -10,7 +10,7 @@ GIT
 PATH
   remote: .
   specs:
-    netsuite_endpoint (0.0.1)
+    netsuite_endpoint (1.0.0)
       netsuite
       sinatra
       tilt
@@ -28,7 +28,7 @@ GEM
     akami (1.3.1)
       gyoku (>= 0.4.0)
       nokogiri
-    builder (3.2.3)
+    builder (3.2.4)
     byebug (2.7.0)
       columnize (~> 0.3)
       debugger-linecache (~> 1.2)
@@ -40,7 +40,7 @@ GEM
     debugger-linecache (1.2.0)
     gyoku (1.3.1)
       builder (>= 2.1.2)
-    httpi (2.4.2)
+    httpi (2.4.5)
       rack
       socksify
     i18n (0.8.0)
@@ -49,13 +49,13 @@ GEM
       multi_json (~> 1.2)
     json (2.0.3)
     method_source (0.8.2)
-    mini_portile2 (2.1.0)
+    mini_portile2 (2.4.0)
     minitest (5.10.1)
     multi_json (1.12.1)
-    netsuite (0.7.7)
-      savon (>= 2.3.0)
-    nokogiri (1.7.0.1)
-      mini_portile2 (~> 2.1.0)
+    netsuite (0.8.6)
+      savon (>= 2.3.0, <= 2.11.1)
+    nokogiri (1.10.10)
+      mini_portile2 (~> 2.4.0)
     nori (2.6.0)
     pry (0.9.12.6)
       coderay (~> 1.0)
@@ -65,7 +65,7 @@ GEM
       byebug (~> 2.7)
       pry (~> 0.9.12)
     rack (1.5.2)
-    rack-protection (1.5.3)
+    rack-protection (1.5.5)
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
@@ -86,16 +86,17 @@ GEM
       rack-protection (~> 1.4)
       tilt (>= 1.3, < 3)
     slop (3.4.7)
-    socksify (1.7.0)
+    socksify (1.7.1)
     thread_safe (0.3.5)
-    tilt (2.0.6)
+    tilt (2.0.10)
     tilt-jbuilder (0.7.1)
       jbuilder
       tilt (>= 1.3.0, < 3)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     vcr (2.8.0)
-    wasabi (3.5.0)
+    wasabi (3.6.1)
+      addressable
       httpi (~> 2.0)
       nokogiri (>= 1.4.2)
     webmock (1.17.1)
