@@ -1,3 +1,4 @@
 .bundle
 netsuite.log
 spec/cassettes
+*.gem
