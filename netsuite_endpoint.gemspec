@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name  = "netsuite_endpoint"
-  s.version = "1.0.0"
+  s.version = "1.2.0"
 
   s.summary = "Cangaroo endpoint for Netsuite"
   s.description = ""
