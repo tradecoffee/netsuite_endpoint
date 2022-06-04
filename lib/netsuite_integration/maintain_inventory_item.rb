@@ -62,20 +62,16 @@ module NetsuiteIntegration
                    external_id: sku,
                    tax_schedule: { internal_id: taxschedule },
                    expense_account: { internal_id: dropship_account },
-                   upc_code: sku,
                    vendor_name: description[0, 60],
-                   purchase_description: description,
-                   stock_description: stock_desc
+                   purchase_description: description
                  )
                else
                  NetSuite::Records::InventoryItem.new(
                    item_id: sku,
                    external_id: ext_id,
                    tax_schedule: { internal_id: taxschedule },
-                   upc_code: sku,
                    vendor_name: description[0, 60],
-                   purchase_description: description,
-                   stock_description: stock_desc
+                   purchase_description: description
                  )
                end
         item.add
@@ -89,20 +85,16 @@ module NetsuiteIntegration
             external_id: ext_id,
             tax_schedule: { internal_id: taxschedule },
             expense_account: { internal_id: dropship_account },
-            upc_code: sku,
             vendor_name: description[0, 60],
-            purchase_description: description,
-            stock_description: stock_desc
+            purchase_description: description
           )
         elsif item.record_type.equal?('InventoryItem')
           item.update(
             item_id: sku,
             external_id: ext_id,
             tax_schedule: { internal_id: taxschedule },
-            upc_code: sku,
             vendor_name: description[0, 60],
-            purchase_description: description,
-            stock_description: stock_desc
+            purchase_description: description
           )
         end
     end
