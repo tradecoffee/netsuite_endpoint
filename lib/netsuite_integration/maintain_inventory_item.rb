@@ -1,4 +1,3 @@
-
 module NetsuiteIntegration
   class MaintainInventoryItem < Base
     attr_reader :config, :payload, :ns_inventoryitem, :inventoryitem_payload
@@ -37,21 +36,18 @@ module NetsuiteIntegration
       description = line_item['name']
       ns_id = line_item['ns_id']
 
-      # always find sku 
+      # always find sku
       item = inventory_item_service.find_by_item_id(sku)
 
       # exit if no changes limit tye amout of nestuite calls/changes
       stock_desc = description.rstrip[0, 21]
 
-      if item.present?
-        # if expense account is blank then its an inventory item
-        if expense_sku &&
-           item.record_type.equal?('InventoryItem')
-          raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
-        end
+      if item.present? && expense_sku &&
+         item.record_type.equal?('InventoryItem')
+        raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
       end
 
-      if !item.present?
+      unless item.present?
         item = if expense_sku
                  NetSuite::Records::NonInventoryResaleItem.new(
                    item_id: sku,
@@ -71,29 +67,7 @@ module NetsuiteIntegration
                  )
                end
         item.add
-      elsif item.present? &&
-            (stock_desc != item.stock_description ||
-            sku != item.item_id ||
-            ns_id != item.internal_id)
-        if item.record_type.equal?('NonInventorySaleItem')
-          item.update(
-            item_id: sku,
-            external_id: ext_id,
-            tax_schedule: { internal_id: taxschedule },
-            expense_account: { internal_id: dropship_account },
-            vendor_name: description[0, 60],
-            purchase_description: description
-          )
-        elsif item.record_type.equal?('InventoryItem')
-          item.update(
-            item_id: sku,
-            external_id: ext_id,
-            tax_schedule: { internal_id: taxschedule },
-            vendor_name: description[0, 60],
-            purchase_description: description
-          )
-        end
-    end
+      end
 
       if item.errors.present? { |e| e.type != 'WARN' }
         raise "Item Update/create failed: #{item.errors.map(&:message)}"
@@ -103,11 +77,11 @@ module NetsuiteIntegration
         ExternalReference.record :product, sku, { netsuite: line_item },
                                  netsuite_id: item.internal_id
       end
-  end
+    end
 
     def inventory_item_service
       @inventory_item_service ||= NetsuiteIntegration::Services::InventoryItem
                                   .new(@config)
     end
- end
+  end
 end
