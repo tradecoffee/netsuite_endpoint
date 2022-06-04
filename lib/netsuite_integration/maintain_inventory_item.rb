@@ -37,12 +37,8 @@ module NetsuiteIntegration
       description = line_item['name']
       ns_id = line_item['ns_id']
 
-      # always find sku using internal id incase of sku rename
-      item = if !ns_id.nil?
-               inventory_item_service.find_by_internal_id(ns_id)
-             else
-               inventory_item_service.find_by_item_id(sku)
-             end
+      # always find sku 
+      item = inventory_item_service.find_by_item_id(sku)
 
       # exit if no changes limit tye amout of nestuite calls/changes
       stock_desc = description.rstrip[0, 21]
