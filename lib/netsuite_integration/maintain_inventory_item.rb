@@ -27,7 +27,7 @@ module NetsuiteIntegration
 
     def add_sku(line_item)
       # exit out prevent netsuite calls as it .... they are to expensive!
-      return unless sku_needs_upd(line_item)
+      # return unless sku_needs_upd(line_item)
 
       sku = line_item['sku']
       expense_sku = line_item['sku_type'] == 'expense'
@@ -37,14 +37,18 @@ module NetsuiteIntegration
       ns_id = line_item['ns_id']
 
       # always find sku
-      item = inventory_item_service.find_by_item_id(sku)
+      item = inventory_item_service.find_by_item_name(sku)
+
+      if item.present?
+        # ignore updates
+        return
 
       # exit if no changes limit tye amout of nestuite calls/changes
       stock_desc = description.rstrip[0, 21]
 
       if item.present? && expense_sku &&
          item.record_type.equal?('InventoryItem')
-        raise 'Item Update/create failed , inventory type mismatch fix in Netsuite'
+        raise 'Item Update/create failed v1 , inventory type mismatch fix in Netsuite'
       end
 
       unless item.present?
@@ -70,7 +74,7 @@ module NetsuiteIntegration
       end
 
       if item.errors.present? { |e| e.type != 'WARN' }
-        raise "Item Update/create failed: #{item.errors.map(&:message)}"
+        raise "Item Update/create failed v1: #{item.errors.map(&:message)}"
       else
         line_item = { sku: sku, netsuite_id: item.internal_id,
                       description: description }
