@@ -89,8 +89,8 @@ module NetsuiteIntegration
                                                                 line: line,
                                                                 rate: item[:cost]&.to_f,
                                                                 quantity: item[:quantity]&.to_i,
-                                                                department: {internal_id: bill_dept},
-                                                                location: { internal_id: bill_location })
+                                                                department: {internal_id: bill_dept}
+                                                             #   ,location: { internal_id: bill_location })
 
           end
           #merge Items
