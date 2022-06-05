@@ -9,11 +9,10 @@ module NetsuiteIntegration
       @vendor_payload = payload[:supplier]
 
       # always find vendor using internal id incase of vendor rename
-      vendor = if !ns_id.nil?
-                 find_by_id(ns_id) || find_by_ext_id(id)
-               else
-                 find_by_name(company_name)
-               end
+      #vendor = if !ns_id.nil?
+      #           find_by_id(ns_id) || find_by_ext_id(id)
+      #else
+       vendor =  find_by_name(company_name)
 
       if vendor.blank?
         vendor = NetSuite::Records::Vendor.new(

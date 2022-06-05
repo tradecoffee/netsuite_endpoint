@@ -104,16 +104,15 @@ module NetsuiteIntegration
       if new_bill?
         # internal numbers differ between platforms
 
-        if !bill_vendor_id.nil?
-          vendor_id = bill_vendor_id
-        else
+    #    if !bill_vendor_id.nil?
+    #      vendor_id = bill_vendor_id
+    #    else
           vendor = find_vendor_by_name(bill_vendor_name)
           if vendor.nil?
             raise "Vendor : #{bill_vendor_name} not found!"
           else
             vendor_id = vendor.internal_id
           end
-        end
 
         bill = NetSuite::Records::VendorCredit.new
         bill.external_id = bill_id
