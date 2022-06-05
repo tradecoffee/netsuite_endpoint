@@ -2,7 +2,7 @@
 
 module NetsuiteIntegration
   class VendorBill < Base
-    attr_reader :config, :payload,  :bill_payload, :bill
+    attr_reader :config, :payload, :bill_payload, :bill
 
     def initialize(config, payload = {})
       super(config, payload)
@@ -25,7 +25,6 @@ module NetsuiteIntegration
     def bill_id
       bill_payload['bill_id']
     end
-
 
     def bill_date
       bill_payload['bill_date']
@@ -68,36 +67,34 @@ module NetsuiteIntegration
       bill_items = bill_payload[:line_items].map do |item|
         # do not process zero qty bills
         next unless item[:quantity].to_i != 0
+
         line += 1
         nsproduct_id = item[:nsproduct_id]
-          if nsproduct_id.nil?
-            # fix correct reference else abort if sku not found!
-            sku = item[:sku]
-            invitem = inventory_item_service.find_by_item_id(sku)
-              if invitem.present?
-                nsproduct_id = invitem.internal_id
-                line_obj = { sku: sku, netsuite_id: invitem.internal_id,
-                            description: invitem.purchase_description }
-                ExternalReference.record :product, sku, { netsuite: line_obj },
-                                        netsuite_id: invitem.internal_id
-              else
-                raise "Error Item/sku missing in Netsuite, please add #{sku}!!"
-              end
+        if nsproduct_id.nil?
+          # fix correct reference else abort if sku not found!
+          sku = item[:sku]
+          invitem = inventory_item_service.find_by_item_id(sku)
+          if invitem.present?
+            nsproduct_id = invitem.internal_id
+            line_obj = { sku: sku, netsuite_id: invitem.internal_id,
+                         description: invitem.purchase_description }
+            ExternalReference.record :product, sku, { netsuite: line_obj },
+                                     netsuite_id: invitem.internal_id
           else
-            invitem = NetSuite::Records::InventoryItem.get(nsproduct_id)
+            raise "Error Item/sku missing in Netsuite, please add #{sku}!!"
           end
-
-          NetSuite::Records::VendorBillItem.new(item: { internal_id: nsproduct_id },
-                                                              line: line,
-                                                              rate: item[:cost]&.to_f,
-                                                              quantity: item[:quantity]&.to_i,
-                                                              department: {internal_id: bill_dept}
-                                                            #  ,location: { internal_id: bill_location }
-                                                            )
-
+        else
+          invitem = NetSuite::Records::InventoryItem.get(nsproduct_id)
         end
-        #merge Items
-      NetSuite::Records::VendorBillItemList.new(replace_all: true,item: bill_items.compact)
+
+        NetSuite::Records::VendorBillItem.new(item: { internal_id: nsproduct_id },
+                                              line: line,
+                                              rate: item[:cost]&.to_f,
+                                              quantity: item[:quantity]&.to_i,
+                                              department: { internal_id: bill_dept })
+      end
+      # merge Items
+      NetSuite::Records::VendorBillItemList.new(replace_all: true, item: bill_items.compact)
     end
 
     def inventory_item_service
@@ -109,14 +106,14 @@ module NetsuiteIntegration
         # internal numbers differ between platforms
 
         if !bill_vendor_id.nil?
-            vendor_id = bill_vendor_id
+          vendor_id = bill_vendor_id
         else
-            vendor = find_vendor_by_name(bill_vendor_name)
-            if vendor.nil?
-              raise "Vendor : #{bill_vendor_name} not found!"
-            else
-              vendor_id = vendor.internal_id
-            end
+          vendor = find_vendor_by_name(bill_vendor_name)
+          if vendor.nil?
+            raise "Vendor : #{bill_vendor_name} not found!"
+          else
+            vendor_id = vendor.internal_id
+          end
         end
 
         @bill = NetSuite::Records::VendorBill.new
@@ -124,18 +121,19 @@ module NetsuiteIntegration
         bill.memo = bill_memo
         bill.account = { internal_id: bill_ap_acct }
         bill.tran_id = bill_id
-        bill.approval_status= { internal_id: bill_init_status}
+        bill.approval_status = { internal_id: bill_init_status }
         bill.entity = { internal_id: vendor_id }
-        bill.tran_date =  NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
+        bill.tran_date = NetSuite::Utilities.normalize_time_to_netsuite_date(bill_date.to_datetime)
         bill.item_list = build_item_list
-        if bill_type == 'DS-CC'
-          bill_type_id = 2
-        else
-          bill_type_id = 1
-        end
-        bill.custom_field_list.custbodyinvoice_type={:name=>bill_type,:internal_id=>bill_type_id,:type_id=>134}
+        bill_type_id = if bill_type == 'DS-CC'
+                         2
+                       else
+                         1
+                       end
+        bill.custom_field_list.custbodyinvoice_type = { name: bill_type, internal_id: bill_type_id,
+                                                        type_id: 134 }
 
-          # we can sometimes receive bills were everything is zero!
+        # we can sometimes receive bills were everything is zero!
         if bill.item_list.item.present?
           bill.add
           if bill.errors.any? { |e| e.type != 'WARN' }
@@ -146,10 +144,10 @@ module NetsuiteIntegration
                           description: bill_memo,
                           type: 'vendor_bill' }
 
-              ExternalReference.record :vendor_bill,
-                                       bill_id,
-                                       { netsuite: line_item },
-                                       netsuite_id: bill.internal_id
+            ExternalReference.record :vendor_bill,
+                                     bill_id,
+                                     { netsuite: line_item },
+                                     netsuite_id: bill.internal_id
 
           end
         end
@@ -165,5 +163,5 @@ module NetsuiteIntegration
                                          }]
                                        }).results.first
     end
- end
+  end
 end
