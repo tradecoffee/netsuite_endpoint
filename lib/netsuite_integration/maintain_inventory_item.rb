@@ -42,6 +42,7 @@ module NetsuiteIntegration
       if item.present?
         # ignore updates
         return
+      end
 
       # exit if no changes limit tye amout of nestuite calls/changes
       stock_desc = description.rstrip[0, 21]
@@ -51,7 +52,7 @@ module NetsuiteIntegration
         raise 'Item Update/create failed v1 , inventory type mismatch fix in Netsuite'
       end
 
-      unless item.present?
+      if item.present?
         item = if expense_sku
                  NetSuite::Records::NonInventoryResaleItem.new(
                    item_id: sku,
@@ -72,6 +73,7 @@ module NetsuiteIntegration
                end
         item.add
       end
+
 
       if item.errors.present? { |e| e.type != 'WARN' }
         raise "Item Update/create failed v1: #{item.errors.map(&:message)}"
