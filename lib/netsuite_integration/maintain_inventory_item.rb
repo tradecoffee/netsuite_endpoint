@@ -72,16 +72,15 @@ module NetsuiteIntegration
                  )
                end
         item.add
-      end
 
-
-      if item.errors.present? { |e| e.type != 'WARN' }
-        raise "Item Update/create failed v1: #{item.errors.map(&:message)}"
-      else
-        line_item = { sku: sku, netsuite_id: item.internal_id,
-                      description: description }
-        ExternalReference.record :product, sku, { netsuite: line_item },
-                                 netsuite_id: item.internal_id
+        if item?.errors.present? { |e| e.type != 'WARN' }
+          raise "Item Update/create failed v1: #{item.errors.map(&:message)}"
+        else
+          line_item = { sku: sku, netsuite_id: item.internal_id,
+                        description: description }
+          ExternalReference.record :product, sku, { netsuite: line_item },
+                                   netsuite_id: item.internal_id
+        end
       end
     end
 
