@@ -58,6 +58,10 @@ module NetsuiteIntegration
       bill_payload['bill_vendor_id']
     end
 
+    def bill_vendor_external_id
+      bill_payload['bill_vendor_external_id']
+    end
+
     def bill_location
       bill_payload['bill_location']
     end
@@ -103,12 +107,7 @@ module NetsuiteIntegration
 
     def create_bill
       if new_bill?
-        # internal numbers differ between platforms
-
-      #  if !bill_vendor_id.nil?
-      #    vendor_id = bill_vendor_id
-      #  else
-          vendor = find_vendor_by_name(bill_vendor_name)
+          vendor = find_vendor_by_ext_id(bill_vendor_external_id) || find_vendor_by_name(bill_vendor_name)
           if vendor.nil?
             raise "Vendor : #{bill_vendor_name} not found!"
           else
@@ -153,13 +152,27 @@ module NetsuiteIntegration
       end
     end
 
+    def find_vendor_by_ext_id(id)
+      NetSuite::Records::Vendor.get(external_id: id)
+      # Silence the error
+      # We don't care that the record was not found
+    rescue NetSuite::RecordNotFound
+    end
+
     def find_vendor_by_name(name)
       NetSuite::Records::Vendor.search(criteria: {
                                          basic: [{
                                            field: 'entityId',
                                            value: name,
-                                           operator: 'contains'
-                                         }]
+                                           operator: 'startswith'
+                                         },
+                                         {
+                                          field: 'category',
+                                          operator: 'anyOf',
+                                          type: 'SearchEnumMultiSelectField',
+                                          value: %w[inventory Dropship Roast-Inventory]
+                                        }
+                                        ]
                                        }).results.first
     end
   end
