@@ -85,7 +85,8 @@ module NetsuiteIntegration
             ExternalReference.record :product, sku, { netsuite: line_obj },
                                      netsuite_id: invitem.internal_id
           else
-            raise "Error Item/sku missing in Netsuite, please add #{sku}!!"
+            add_sku(sku)
+            # raise "Error Item/sku missing in Netsuite, please add #{sku}!!"
           end
         else
           invitem = NetSuite::Records::InventoryItem.get(nsproduct_id)
@@ -107,12 +108,12 @@ module NetsuiteIntegration
 
     def create_bill
       if new_bill?
-          vendor = find_vendor_by_ext_id(bill_vendor_external_id) || find_vendor_by_name(bill_vendor_name)
-          if vendor.nil?
-            raise "Vendor : #{bill_vendor_name} not found!"
-          else
-            vendor_id = vendor.internal_id
-          end
+        vendor = find_vendor_by_ext_id(bill_vendor_external_id) || find_vendor_by_name(bill_vendor_name)
+        if vendor.nil?
+          raise "Vendor : #{bill_vendor_name} not found!"
+        else
+          vendor_id = vendor.internal_id
+        end
 
         @bill = NetSuite::Records::VendorBill.new
         bill.external_id = bill_id
@@ -159,20 +160,29 @@ module NetsuiteIntegration
     rescue NetSuite::RecordNotFound
     end
 
+    def add_sku(sku)
+      item =
+      NetSuite::Records::NonInventoryResaleItem.new(
+          item_id: sku,
+          expense_account: { internal_id: 631 },
+          tax_schedule:  { internal_id: 1 }
+        )
+      item.add
+    end
+
     def find_vendor_by_name(name)
       NetSuite::Records::Vendor.search(criteria: {
                                          basic: [{
                                            field: 'entityId',
                                            value: name,
-                                           operator: 'startswith'
+                                           operator: 'startsWith'
                                          },
-                                         {
-                                          field: 'category',
-                                          operator: 'anyOf',
-                                          type: 'SearchEnumMultiSelectField',
-                                          value: %w[inventory Dropship Roast-Inventory]
-                                        }
-                                        ]
+                                                 {
+                                                   field: 'category',
+                                                   operator: 'anyOf',
+                                                   type: 'SearchEnumMultiSelectField',
+                                                   value: %w[inventory Dropship Roast-Inventory]
+                                                 }]
                                        }).results.first
     end
   end
