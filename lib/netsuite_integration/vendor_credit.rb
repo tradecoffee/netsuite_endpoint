@@ -162,7 +162,7 @@ module NetsuiteIntegration
                                          basic: [{
                                            field: 'entityId',
                                            value: name,
-                                           operator: 'startswith'
+                                           operator: 'startsWith'
                                          },
                                                  {
                                                    field: 'category',
