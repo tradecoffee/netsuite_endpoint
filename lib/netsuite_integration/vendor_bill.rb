@@ -181,7 +181,7 @@ module NetsuiteIntegration
                                                    field: 'category',
                                                    operator: 'anyOf',
                                                    type: 'SearchEnumMultiSelectField',
-                                                   value: %w[inventory Dropship Roast-Inventory]
+                                                   value: %w[Inventory Dropship Roast-Inventory]
                                                  }]
                                        }).results.first
     end
