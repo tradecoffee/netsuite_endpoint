@@ -163,14 +163,9 @@ module NetsuiteIntegration
                                            field: 'entityId',
                                            value: name,
                                            operator: 'startsWith'
-                                         },
-                                                 {
-                                                   field: 'category',
-                                                   operator: 'anyOf',
-                                                   type: 'SearchEnumMultiSelectField',
-                                                   value: %w[inventory Dropship Roast-Inventory]
-                                                 }]
+                                         }]
                                        }).results.first
+        rescue NetSuite::RecordNotFound
     end
   end
 end
