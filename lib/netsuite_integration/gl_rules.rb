@@ -117,7 +117,7 @@ module NetsuiteIntegration
 end
 
 class TransactionLookupMap < Base
-    Lookupmap = Struct.new(:acct,:dept)
+    Lookupmap = Struct.new(:acct, :dept, :class)
 
     def self.[](key)
       lookupmaps[key]
