@@ -91,12 +91,17 @@ module NetsuiteIntegration
         else
           invitem = NetSuite::Records::InventoryItem.get(nsproduct_id)
         end
-
+        classification = if item[:role] == 'office_coffee'
+          102
+        else
+          101
+        end
         NetSuite::Records::VendorBillItem.new(item: { internal_id: nsproduct_id },
                                               line: line,
                                               rate: item[:cost]&.to_f,
                                               quantity: item[:quantity]&.to_i,
-                                              department: { internal_id: bill_dept })
+                                              department: { internal_id: bill_dept },
+                                              class: { internal_id: classification })
       end
       # merge Items
       NetSuite::Records::VendorBillItemList.new(replace_all: true, item: bill_items.compact)

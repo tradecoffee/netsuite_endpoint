@@ -53,7 +53,11 @@ module NetsuiteIntegration
       # TransactionCode.add :spreesale, amtcol: :sale, debit_acct: {val: 345}, credit_acct: {map: :ptype}, debit_dept: {map: :location},credit_dept: {map: :location}, memo: {desc: :memo}
       glrules[:transactioncodes].map do |codes|
         codes[:columns].map do |columns|
-          TransactionCode.add codes['name'].to_sym, amtcol: columns['name'].to_sym, debit_acct: columns['debit_acct'], credit_acct: columns['credit_acct'], debit_dept: columns['debit_dept'], credit_dept: columns['credit_dept'], memo: columns['memo']
+          TransactionCode.add codes['name'].to_sym, amtcol: columns['name'].to_sym,
+          debit_acct: columns['debit_acct'], credit_acct: columns['credit_acct'],
+          debit_dept: columns['debit_dept'], credit_dept: columns['credit_dept'],
+          memo: columns['memo'],
+          debit_class: columns['debit_class'], credit_class: columns['credit_class']
         end
       end
     end
@@ -61,7 +65,7 @@ module NetsuiteIntegration
     def load_maps
       # add :cctype_giftcard, acct: 744, dept: nil
       glrules[:lookupmaps].map do |maps|
-        TransactionLookupMap.add maps['name'].to_sym, acct: maps['acct'], dept: maps['dept']
+        TransactionLookupMap.add maps['name'].to_sym, acct: maps['acct'], dept: maps['dept'], class: maps['class']
       end
     end
 

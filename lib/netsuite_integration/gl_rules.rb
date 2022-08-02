@@ -11,7 +11,7 @@ module NetsuiteIntegration
   end
 
   class TransactionCode < Base
-    Transaction = Struct.new(:amtcol,:debit_acct, :credit_acct, :debit_dept, :credit_dept, :memo) do
+    Transaction = Struct.new(:amtcol,:debit_acct, :credit_acct, :debit_dept, :credit_dept, :memo, :debit_class, :credit_class) do
       def journallines(line)
           @journal_items=[]
             amount=line[amtcol]&.round(2)
@@ -33,13 +33,20 @@ module NetsuiteIntegration
                    dept=fieldmap(map,line,'dept')
                 end
 
+                classification = debit_class.dig(:val)
+                if classification.nil?
+                   map = debit_class.dig(:map)
+                   classification = fieldmap(map,line,'class')
+                end
+
                 @journal_items << NetSuite::Records::JournalEntryLine.new({
                     account: { internal_id: acct },
                     department: if !dept.nil? then { internal_id: dept } else nil end,
                     debit: if amount > 0 then amount.abs else 0 end,
                     credit: if amount < 0 then amount.abs else 0 end,
                     memo: memo,
-                    location: {internal_id: location}
+                    location: {internal_id: location},
+                    class: {internal_id: classification}
                 })
 
                 ######  credit journal #########
@@ -56,6 +63,12 @@ module NetsuiteIntegration
                    dept=fieldmap(map,line,'dept')
                 end
 
+                classification = credit_class.dig(:val)
+                  if classification.nil?
+                     map = credit_class.dig(:map)
+                     classification = fieldmap(map,line,'class')
+                  end
+
                 amount*=-1
 
                 @journal_items << NetSuite::Records::JournalEntryLine.new({
@@ -64,7 +77,8 @@ module NetsuiteIntegration
                       debit: if amount > 0 then amount.abs else 0 end,
                       credit: if amount < 0 then amount.abs else 0 end,
                       memo: memo,
-                      location: {internal_id: location}
+                      location: {internal_id: location},
+                      class: {internal_id: classification}
                   })
             end
         end
@@ -96,9 +110,9 @@ module NetsuiteIntegration
       @transactions ||= {}
     end
 
-    def self.add(key, amtcol:,debit_acct:, credit_acct: ,debit_dept: ,credit_dept: , memo:)
+    def self.add(key, amtcol:,debit_acct:, credit_acct: ,debit_dept: ,credit_dept: , memo:, debit_class:, credit_class:)
       transactions[key] ||= []
-      transactions[key] << Transaction.new(amtcol,debit_acct, credit_acct, debit_dept, credit_dept ,memo)
+      transactions[key] << Transaction.new(amtcol, debit_acct, credit_acct, debit_dept, credit_dept, memo, debit_class, credit_class)
     end
 end
 
@@ -113,9 +127,9 @@ class TransactionLookupMap < Base
       @lookupmaps ||= {}
     end
 
-    def self.add(key, acct:, dept:)
+    def self.add(key, acct:, dept:, class:)
         lookupmaps[key] ||= []
-        lookupmaps[key] << Lookupmap.new(acct, dept)
+        lookupmaps[key] << Lookupmap.new(acct, dept, class)
     end
 
   end
