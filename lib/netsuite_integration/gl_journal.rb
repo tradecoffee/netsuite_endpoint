@@ -57,7 +57,7 @@ module NetsuiteIntegration
           debit_acct: columns['debit_acct'], credit_acct: columns['credit_acct'],
           debit_dept: columns['debit_dept'], credit_dept: columns['credit_dept'],
           memo: columns['memo'],
-          debit_class: columns['debit_class'], credit_class: columns['credit_class']
+          debit_lob: columns['debit_lob'], credit_lob: columns['credit_lob']
         end
       end
     end
@@ -65,7 +65,7 @@ module NetsuiteIntegration
     def load_maps
       # add :cctype_giftcard, acct: 744, dept: nil
       glrules[:lookupmaps].map do |maps|
-        TransactionLookupMap.add maps['name'].to_sym, acct: maps['acct'], dept: maps['dept'], class: maps['class']
+        TransactionLookupMap.add maps['name'].to_sym, acct: maps['acct'], dept: maps['dept'], lob: maps['lob']
       end
     end
 

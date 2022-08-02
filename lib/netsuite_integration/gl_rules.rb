@@ -11,7 +11,7 @@ module NetsuiteIntegration
   end
 
   class TransactionCode < Base
-    Transaction = Struct.new(:amtcol,:debit_acct, :credit_acct, :debit_dept, :credit_dept, :memo, :debit_class, :credit_class) do
+    Transaction = Struct.new(:amtcol,:debit_acct, :credit_acct, :debit_dept, :credit_dept, :memo, :debit_lob, :credit_lob) do
       def journallines(line)
           @journal_items=[]
             amount=line[amtcol]&.round(2)
@@ -33,10 +33,10 @@ module NetsuiteIntegration
                    dept=fieldmap(map,line,'dept')
                 end
 
-                classification = debit_class.dig(:val)
+                classification = debit_lob.dig(:val)
                 if classification.nil?
-                   map = debit_class.dig(:map)
-                   classification = fieldmap(map,line,'class')
+                   map = debit_lob.dig(:map)
+                   classification = fieldmap(map,line,'lob')
                 end
 
                 @journal_items << NetSuite::Records::JournalEntryLine.new({
@@ -63,10 +63,10 @@ module NetsuiteIntegration
                    dept=fieldmap(map,line,'dept')
                 end
 
-                classification = credit_class.dig(:val)
+                classification = credit_lob.dig(:val)
                   if classification.nil?
-                     map = credit_class.dig(:map)
-                     classification = fieldmap(map,line,'class')
+                     map = credit_lob.dig(:map)
+                     classification = fieldmap(map,line,'lob')
                   end
 
                 amount*=-1
@@ -110,14 +110,14 @@ module NetsuiteIntegration
       @transactions ||= {}
     end
 
-    def self.add(key, amtcol:,debit_acct:, credit_acct: ,debit_dept: ,credit_dept: , memo:, debit_class:, credit_class:)
+    def self.add(key, amtcol:,debit_acct:, credit_acct: ,debit_dept: ,credit_dept: , memo:, debit_lob:, credit_lob:)
       transactions[key] ||= []
-      transactions[key] << Transaction.new(amtcol, debit_acct, credit_acct, debit_dept, credit_dept, memo, debit_class, credit_class)
+      transactions[key] << Transaction.new(amtcol, debit_acct, credit_acct, debit_dept, credit_dept, memo, debit_lob, credit_lob)
     end
 end
 
 class TransactionLookupMap < Base
-    Lookupmap = Struct.new(:acct, :dept, :class)
+    Lookupmap = Struct.new(:acct, :dept, :lob)
 
     def self.[](key)
       lookupmaps[key]
@@ -127,9 +127,9 @@ class TransactionLookupMap < Base
       @lookupmaps ||= {}
     end
 
-    def self.add(key, acct:, dept:, class:)
+    def self.add(key, acct:, dept:, lob:)
         lookupmaps[key] ||= []
-        lookupmaps[key] << Lookupmap.new(acct, dept, class)
+        lookupmaps[key] << Lookupmap.new(acct, dept, lob)
     end
 
   end
